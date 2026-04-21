@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>2026 NHL Bracket · 6 Friends · Shared Bracket with Export/Import</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, 'Segoe UI', 'Roboto', 'Inter', sans-serif;
+        }
+        body {
+            background: linear-gradient(145deg, #0a2f2a 0%, #051d1a 100%);
+            margin: 0;
+            padding: 20px;
+            color: #eef4ff;
+        }
+        .app-container {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        h1 {
+            font-weight: 800;
+            font-size: 2.2rem;
+            margin: 0;
+            background: linear-gradient(135deg, #FFD966, #FF8C42);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .year-badge {
+            background: #ffb34722;
+            display: inline-block;
+            padding: 4px 18px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            backdrop-filter: blur(4px);
+            margin-top: 8px;
+        }
+        .setup-panel {
+            background: #0d2622cc;
+            backdrop-filter: blur(8px);
+            border-radius: 40px;
+            padding: 20px 24px;
+            margin-bottom: 32px;
+            border: 1px solid #3c8b7e;
+        }
+        .friends-input-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+        .friend-input-item {
+            flex: 1;
+            min-width: 130px;
+        }
+        .friend-input-item label {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #b9f6e4;
+        }
+        .friend-input-item input {
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 60px;
+            border: none;
+            background: #1e423e;
+            color: white;
+            font-weight: 500;
+            outline: none;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+        button {
+            background: #ffb347;
+            border: none;
+            padding: 8px 24px;
+            border-radius: 40px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.1s;
+            font-family: inherit;
+        }
+        button.secondary {
+            background: #2c5a54;
+            color: white;
+        }
+        button.danger {
+            background: #6e2c3c;
+            color: white;
+        }
+        button.success {
+            background: #2b8c5e;
+            color: white;
+        }
+        .share-bar {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .bracket-wrapper {
+            overflow-x: auto;
+            background: rgba(0, 20, 18, 0.5);
+            border-radius: 48px;
+            padding: 20px 12px;
+        }
+        .bracket {
+            display: flex;
+            gap: 24px;
+            min-width: 900px;
+        }
+        .round {
+            flex: 1;
+            background: rgba(0,0,0,0.3);
+            border-radius: 32px;
+            padding: 16px 12px;
+        }
+        .round h3 {
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ffb34788;
+            display: inline-block;
+            width: 100%;
+        }
+        .matchup {
+            background: #102b27e0;
+            margin-bottom: 32px;
+            border-radius: 28px;
+            padding: 14px;
+            border: 1px solid #3c8b7e;
+        }
+        .series-title {
+            font-size: 0.7rem;
+            background: #00000066;
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 40px;
+            margin-bottom: 12px;
+        }
+        .team-main-row {
+            background: #0a211e;
+            margin: 8px 0;
+            border-radius: 60px;
+            padding: 8px 12px;
+        }
+        .team-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .team-name {
+            font-weight: 800;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .friend-picks-list {
+            display: inline-flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-left: 8px;
+            font-size: 0.7rem;
+            font-weight: normal;
+            background: #02100e80;
+            padding: 4px 10px;
+            border-radius: 40px;
+        }
+        .friend-badge-sm {
+            background: #2c5a54;
+            padding: 2px 8px;
+            border-radius: 30px;
+            font-weight: 600;
+            color: #ffdfb3;
+        }
+        .games-scores {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 6px;
+            padding-left: 8px;
+        }
+        .game-score-box {
+            background: #071815;
+            border-radius: 20px;
+            padding: 4px 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.7rem;
+            transition: all 0.15s ease;
+        }
+        .game-score-box.winner-box {
+            background: linear-gradient(135deg, #2b8c5e, #1a6b46);
+            box-shadow: 0 0 0 2px #ffd966, 0 0 8px rgba(255, 217, 102, 0.6);
+        }
+        .game-score-box.winner-box input {
+            background: #0e3d2c;
+            font-weight: bold;
+            color: #ffeaad;
+        }
+        .game-score-box.loser-box {
+            background: #4a2a2a;
+            opacity: 0.85;
+        }
+        .game-score-box label {
+            font-size: 0.6rem;
+            font-weight: 600;
+            color: #ffdfb3;
+        }
+        .game-score-box input {
+            width: 48px;
+            background: #2c5a54;
+            border: none;
+            border-radius: 20px;
+            padding: 4px 6px;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            font-size: 0.75rem;
+        }
+        .actual-winner-btn {
+            background: #ffb347;
+            color: #1f2f2c;
+            border: none;
+            border-radius: 40px;
+            padding: 4px 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .winner-set {
+            background: gold;
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            display: inline-block;
+        }
+        .picks-section {
+            margin-top: 14px;
+            background: #02100e70;
+            border-radius: 24px;
+            padding: 10px;
+        }
+        .friends-picks {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .pick-card {
+            background: #1f4640;
+            border-radius: 40px;
+            padding: 5px 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .pick-card.correct { background: #2b8c5e; box-shadow: 0 0 0 1px #f9d56e; }
+        .pick-card.wrong { background: #7a2e3f; text-decoration: line-through; opacity: 0.9; }
+        .friend-name {
+            font-weight: 800;
+            color: #ffdfa5;
+        }
+        .score-bar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin: 20px 0;
+        }
+        .score-chip {
+            background: #122e2a;
+            border-radius: 60px;
+            padding: 6px 18px;
+            font-weight: 700;
+            display: flex;
+            gap: 12px;
+            border-left: 4px solid #ffb347;
+        }
+        .leaderboard {
+            text-align: center;
+            background: #071e1b70;
+            border-radius: 60px;
+            padding: 8px;
+            width: fit-content;
+            margin: 0 auto 20px auto;
+        }
+        .games-note {
+            font-size: 0.65rem;
+            text-align: center;
+            margin-top: 6px;
+            opacity: 0.8;
+        }
+        footer {
+            text-align: center;
+            font-size: 0.7rem;
+            margin-top: 24px;
+            opacity: 0.7;
+        }
+        @media (max-width: 800px) {
+            .game-score-box input { width: 42px; }
+            .friend-badge-sm { font-size: 0.6rem; padding: 1px 6px; }
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div class="header">
+        <h1>🏒 2026 STANLEY CUP PLAYOFFS 🏆</h1>
+        <div class="year-badge">👥 SHARED BRACKET · EXPORT & IMPORT DATA · SEND TO FRIENDS</div>
+    </div>
+
+    <!-- SHARE BUTTONS BAR -->
+    <div class="share-bar" id="shareBar">
+        <button id="exportDataBtn" class="success">📤 Export Bracket Data</button>
+        <button id="importDataBtn" class="secondary">📥 Import Bracket Data</button>
+        <input type="file" id="importFileInput" accept=".json" style="display: none;">
+    </div>
+
+    <!-- FRIENDS SETUP -->
+    <div class="setup-panel" id="setupPanel">
+        <div style="font-weight:700; margin-bottom:16px;">👥 Enter your 6 friends' names & their Round 1 picks (click on any pick later to change)</div>
+        <div class="friends-input-grid" id="friendsNameInputs"></div>
+        <div class="action-buttons">
+            <button id="saveFriendsBtn" class="secondary">💾 Save & Start Bracket</button>
+            <button id="resetAllBtn" class="danger">🔄 Reset All Data</button>
+        </div>
+    </div>
+
+    <!-- LIVE BRACKET + SCORES -->
+    <div id="bracketLiveArea" style="display: none;">
+        <div class="score-bar" id="scoreBar"></div>
+        <div class="leaderboard" id="leaderText"></div>
+        <div class="bracket-wrapper">
+            <div class="bracket" id="bracketGrid"></div>
+        </div>
+        <div class="games-note">📝 Each team has 7 score boxes (Games 1-7). Winning game boxes light up GREEN. "Set as Winner" updates friends' scores.</div>
+        <footer>✅ Export saves ALL data (friends, picks, scores, winners) to a file. Send that file to friends → they Import to see the exact same bracket.</footer>
+    </div>
+</div>
+
+<script>
+    // ======================== 2026 FIRST ROUND MATCHUPS ========================
+    const MATCHUPS = [
+        { id: "E1", conf: "Eastern", topTeam: "Buffalo Sabres", bottomTeam: "Boston Bruins", winner: null },
+        { id: "E2", conf: "Eastern", topTeam: "Tampa Bay Lightning", bottomTeam: "Montreal Canadiens", winner: null },
+        { id: "E3", conf: "Eastern", topTeam: "Carolina Hurricanes", bottomTeam: "Ottawa Senators", winner: null },
+        { id: "E4", conf: "Eastern", topTeam: "Philadelphia Flyers", bottomTeam: "Pittsburgh Penguins", winner: null },
+        { id: "W1", conf: "Western", topTeam: "Colorado Avalanche", bottomTeam: "Los Angeles Kings", winner: null },
+        { id: "W2", conf: "Western", topTeam: "Dallas Stars", bottomTeam: "Minnesota Wild", winner: null },
+        { id: "W3", conf: "Western", topTeam: "Vegas Golden Knights", bottomTeam: "Utah Mammoth", winner: null },
+        { id: "W4", conf: "Western", topTeam: "Edmonton Oilers", bottomTeam: "Anaheim Ducks", winner: null }
+    ];
+
+    // Global state
+    let friends = ["Marc", "M-A", "Eric", "Frank", "Fred", "Nick"];
+    let picksMatrix = [];
+    let actualWinners = [];
+    let scoresData = [];
+
+    function initScoresData() {
+        const data = [];
+        for (let m = 0; m < MATCHUPS.length; m++) {
+            data.push([
+                new Array(8).fill(null),
+                new Array(8).fill(null)
+            ]);
+        }
+        return data;
+    }
+
+    function initDefaultPicks() {
+        const matrix = [];
+        for (let f = 0; f < friends.length; f++) {
+            const row = [];
+            for (let m = 0; m < MATCHUPS.length; m++) {
+                if (f === 0 || f === 2 || f === 4) {
+                    row.push(MATCHUPS[m].topTeam);
+                } else {
+                    row.push(MATCHUPS[m].bottomTeam);
+                }
+            }
+            matrix.push(row);
+        }
+        return matrix;
+    }
+
+    function saveToLocalStorage() {
+        localStorage.setItem('nhl2026_friends_v3', JSON.stringify(friends));
+        localStorage.setItem('nhl2026_picksMatrix_v3', JSON.stringify(picksMatrix));
+        localStorage.setItem('nhl2026_actualWinners_v3', JSON.stringify(actualWinners));
+        localStorage.setItem('nhl2026_scoresData_v3', JSON.stringify(scoresData));
+    }
+
+    function loadFromLocalStorage() {
+        const storedFriends = localStorage.getItem('nhl2026_friends_v3');
+        const storedPicks = localStorage.getItem('nhl2026_picksMatrix_v3');
+        const storedWinners = localStorage.getItem('nhl2026_actualWinners_v3');
+        const storedScores = localStorage.getItem('nhl2026_scoresData_v3');
+        try {
+            if (storedFriends && storedPicks && storedWinners && storedScores) {
+                const parsedFriends = JSON.parse(storedFriends);
+                const parsedPicks = JSON.parse(storedPicks);
+                const parsedWinners = JSON.parse(storedWinners);
+                const parsedScores = JSON.parse(storedScores);
+                if (parsedFriends.length === 6 && parsedPicks.length === 6 && parsedWinners.length === MATCHUPS.length) {
+                    friends = parsedFriends;
+                    picksMatrix = parsedPicks;
+                    actualWinners = parsedWinners;
+                    scoresData = parsedScores;
+                    return true;
+                }
+            }
+        } catch(e) {}
+        return false;
+    }
+
+    // EXPORT all data to JSON file
+    function exportAllData() {
+        const exportData = {
+            version: "2026-nhl-bracket-v1",
+            exportDate: new Date().toISOString(),
+            friends: friends,
+            picksMatrix: picksMatrix,
+            actualWinners: actualWinners,
+            scoresData: scoresData,
+            matchups: MATCHUPS.map(m => ({ id: m.id, conf: m.conf, topTeam: m.topTeam, bottomTeam: m.bottomTeam, winner: m.winner }))
+        };
+        
+        const dataStr = JSON.stringify(exportData, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `nhl-bracket-2026-${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        alert('✅ Bracket data exported successfully! Send this file to your friends.');
+    }
+
+    // IMPORT data from JSON file
+    function importData(file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const imported = JSON.parse(e.target.result);
+                
+                // Validate imported data structure
+                if (imported.friends && imported.friends.length === 6 &&
+                    imported.picksMatrix && imported.picksMatrix.length === 6 &&
+                    imported.actualWinners && imported.actualWinners.length === MATCHUPS.length &&
+                    imported.scoresData && imported.scoresData.length === MATCHUPS.length) {
+                    
+                    friends = imported.friends;
+                    picksMatrix = imported.picksMatrix;
+                    actualWinners = imported.actualWinners;
+                    scoresData = imported.scoresData;
+                    
+                    saveToLocalStorage();
+                    renderFriendsInputs();
+                    
+                    // Refresh the bracket if visible
+                    if (document.getElementById('bracketLiveArea').style.display !== 'none') {
+                        renderFullBracket();
+                    }
+                    
+                    alert('✅ Bracket data imported successfully! All picks and scores loaded.');
+                } else {
+                    alert('❌ Invalid file format. Please export a valid bracket file first.');
+                }
+            } catch(err) {
+                alert('❌ Error reading file: ' + err.message);
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    function computeScores() {
+        const scores = new Array(friends.length).fill(0);
+        for (let f = 0; f < friends.length; f++) {
+            let correct = 0;
+            for (let m = 0; m < MATCHUPS.length; m++) {
+                const realWinner = actualWinners[m];
+                if (realWinner && picksMatrix[f] && picksMatrix[f][m] === realWinner) {
+                    correct++;
+                }
+            }
+            scores[f] = correct;
+        }
+        return scores;
+    }
+
+    function isGameWinner(matchupIdx, teamIdx, gameNum) {
+        const matchupScores = scoresData[matchupIdx];
+        if (!matchupScores) return false;
+        
+        const thisTeamScore = matchupScores[teamIdx][gameNum];
+        const otherTeamIdx = teamIdx === 0 ? 1 : 0;
+        const otherTeamScore = matchupScores[otherTeamIdx][gameNum];
+        
+        if (thisTeamScore !== null && otherTeamScore !== null && thisTeamScore > otherTeamScore) {
+            return true;
+        }
+        return false;
+    }
+
+    function updateGameScore(matchupIdx, teamIdx, gameNum, value) {
+        if (!scoresData[matchupIdx]) return;
+        const num = parseInt(value);
+        const finalVal = isNaN(num) ? null : Math.min(99, Math.max(0, num));
+        scoresData[matchupIdx][teamIdx][gameNum] = finalVal;
+        saveToLocalStorage();
+        renderFullBracket();
+    }
+
+    function setActualWinner(matchupIdx, team) {
+        if (actualWinners[matchupIdx] === team) return;
+        actualWinners[matchupIdx] = team;
+        saveToLocalStorage();
+        renderFullBracket();
+    }
+
+    function openPickModal(friendIdx, matchupIdx, currentPick) {
+        const matchup = MATCHUPS[matchupIdx];
+        const options = [matchup.topTeam, matchup.bottomTeam];
+        const modal = document.createElement('div');
+        modal.style.position = 'fixed'; modal.style.top = '0'; modal.style.left = '0';
+        modal.style.width = '100%'; modal.style.height = '100%';
+        modal.style.backgroundColor = 'rgba(0,0,0,0.85)';
+        modal.style.backdropFilter = 'blur(5px)';
+        modal.style.zIndex = '1000';
+        modal.style.display = 'flex';
+        modal.style.alignItems = 'center';
+        modal.style.justifyContent = 'center';
+        const card = document.createElement('div');
+        card.style.backgroundColor = '#15312c';
+        card.style.borderRadius = '40px';
+        card.style.padding = '24px';
+        card.style.minWidth = '260px';
+        card.style.border = '2px solid #ffb347';
+        card.innerHTML = `
+            <h3 style="margin:0 0 16px 0; text-align:center;">Change pick for ${escapeHtml(friends[friendIdx])}</h3>
+            <div style="display:flex; flex-direction:column; gap:12px;">
+                ${options.map(team => `<button class="pick-opt" data-team="${escapeHtml(team)}" style="background:#2c5a54; padding:10px; border-radius:60px;">${escapeHtml(team)}</button>`).join('')}
+                <button class="cancel-pick" style="background:#5a3e2c;">Cancel</button>
+            </div>
+        `;
+        modal.appendChild(card);
+        document.body.appendChild(modal);
+        const closeModal = () => modal.remove();
+        card.querySelectorAll('.pick-opt').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const selected = btn.getAttribute('data-team');
+                picksMatrix[friendIdx][matchupIdx] = selected;
+                saveToLocalStorage();
+                renderFullBracket();
+                closeModal();
+            });
+        });
+        card.querySelector('.cancel-pick').addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => { if(e.target === modal) closeModal(); });
+    }
+
+    function escapeHtml(str) { return String(str).replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+
+    function getFriendsForTeam(matchupIdx, teamName) {
+        const friendsList = [];
+        for (let f = 0; f < friends.length; f++) {
+            if (picksMatrix[f] && picksMatrix[f][matchupIdx] === teamName) {
+                friendsList.push(friends[f]);
+            }
+        }
+        return friendsList;
+    }
+
+    function renderFullBracket() {
+        if (!friends.length || picksMatrix.length === 0) return;
+        const scores = computeScores();
+        const scoreBarDiv = document.getElementById('scoreBar');
+        const leaderDiv = document.getElementById('leaderText');
+        if (scoreBarDiv) {
+            scoreBarDiv.innerHTML = friends.map((name, idx) => `
+                <div class="score-chip">
+                    <span>${escapeHtml(name)}</span>
+                    <span class="points">${scores[idx]} / ${MATCHUPS.length}</span>
+                </div>
+            `).join('');
+        }
+        const maxScore = Math.max(...scores);
+        const leaders = friends.filter((_, i) => scores[i] === maxScore).map(escapeHtml).join(', ');
+        if (leaderDiv) leaderDiv.innerHTML = `🏆 CURRENT LEADER${maxScore !== 0 ? 'S' : ''}: ${leaders || '—'} &nbsp;|&nbsp; ${maxScore} correct picks 🏆`;
+
+        const bracketGrid = document.getElementById('bracketGrid');
+        if (!bracketGrid) return;
+        bracketGrid.innerHTML = '';
+        const roundCol = document.createElement('div');
+        roundCol.className = 'round';
+        roundCol.innerHTML = '<h3>🥅 ROUND 1 · 2026 · GAME SCORES (G1-G7)</h3>';
+
+        MATCHUPS.forEach((matchup, mIdx) => {
+            const { topTeam, bottomTeam, conf, id } = matchup;
+            const currentWinner = actualWinners[mIdx];
+            const matchupDiv = document.createElement('div');
+            matchupDiv.className = 'matchup';
+            
+            const topTeamScores = scoresData[mIdx]?.[0] || new Array(8).fill(null);
+            const bottomTeamScores = scoresData[mIdx]?.[1] || new Array(8).fill(null);
+            
+            const friendsForTop = getFriendsForTeam(mIdx, topTeam);
+            const friendsForBottom = getFriendsForTeam(mIdx, bottomTeam);
+            
+            const generateScoreBoxes = (teamIdx, teamScoresArr) => {
+                let boxesHtml = `<div class="games-scores">`;
+                for (let g = 1; g <= 7; g++) {
+                    const currentVal = teamScoresArr[g];
+                    const valDisplay = (currentVal !== null && currentVal !== undefined) ? currentVal : '';
+                    const isWinner = isGameWinner(mIdx, teamIdx, g);
+                    const isLoser = !isWinner && teamScoresArr[g] !== null && scoresData[mIdx]?.[teamIdx === 0 ? 1 : 0]?.[g] !== null;
+                    
+                    boxesHtml += `
+                        <div class="game-score-box ${isWinner ? 'winner-box' : (isLoser ? 'loser-box' : '')}">
+                            <label>G${g}</label>
+                            <input type="number" class="score-input" data-matchup="${mIdx}" data-teamidx="${teamIdx}" data-game="${g}" value="${valDisplay}" placeholder="-" min="0" max="99" step="1" style="width:48px;">
+                        </div>
+                    `;
+                }
+                boxesHtml += `</div>`;
+                return boxesHtml;
+            };
+            
+            const renderFriendBadges = (friendArray) => {
+                if (!friendArray.length) return '<span style="opacity:0.6; font-size:0.65rem; font-style:italic;"> (no picks)</span>';
+                return `<div class="friend-picks-list">${friendArray.map(f => `<span class="friend-badge-sm">${escapeHtml(f)}</span>`).join('')}</div>`;
+            };
+            
+            matchupDiv.innerHTML = `
+                <div class="series-title">${conf} · ${id}</div>
+                
+                <div class="team-main-row">
+                    <div class="team-header">
+                        <div class="team-name">
+                            🐙 ${escapeHtml(topTeam)}
+                            ${renderFriendBadges(friendsForTop)}
+                        </div>
+                        <button class="actual-winner-btn set-winner-btn" data-team="${escapeHtml(topTeam)}" data-midx="${mIdx}">🏆 Set as Winner</button>
+                    </div>
+                    ${generateScoreBoxes(0, topTeamScores)}
+                </div>
+                
+                <div class="team-main-row">
+                    <div class="team-header">
+                        <div class="team-name">
+                            ⚡ ${escapeHtml(bottomTeam)}
+                            ${renderFriendBadges(friendsForBottom)}
+                        </div>
+                        <button class="actual-winner-btn set-winner-btn" data-team="${escapeHtml(bottomTeam)}" data-midx="${mIdx}">🏆 Set as Winner</button>
+                    </div>
+                    ${generateScoreBoxes(1, bottomTeamScores)}
+                </div>
+                
+                <div style="margin-top: 8px; text-align:center;">
+                    ${currentWinner ? `<span class="winner-set">✅ SERIES WINNER: ${escapeHtml(currentWinner)}</span>` : '<span style="opacity:0.6;">⚡ No winner set yet (click Set as Winner when series ends)</span>'}
+                </div>
+                
+                <div class="picks-section">
+                    <div class="picks-label" style="font-size:0.7rem; margin-bottom:6px;">🎲 FRIENDS' PICKS (click to edit)</div>
+                    <div class="friends-picks" id="picks-${mIdx}"></div>
+                </div>
+            `;
+            
+            const picksContainer = matchupDiv.querySelector(`.friends-picks`);
+            for (let f = 0; f < friends.length; f++) {
+                const pick = picksMatrix[f]?.[mIdx] || matchup.topTeam;
+                const isCorrect = (currentWinner && pick === currentWinner);
+                const bubble = document.createElement('div');
+                bubble.className = `pick-card ${isCorrect ? 'correct' : (currentWinner ? 'wrong' : '')}`;
+                bubble.innerHTML = `<span class="friend-name">${escapeHtml(friends[f])}:</span> ${escapeHtml(pick)}`;
+                bubble.style.cursor = 'pointer';
+                bubble.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openPickModal(f, mIdx, pick);
+                });
+                picksContainer.appendChild(bubble);
+            }
+            
+            roundCol.appendChild(matchupDiv);
+        });
+        
+        bracketGrid.appendChild(roundCol);
+        
+        document.querySelectorAll('.set-winner-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const team = btn.getAttribute('data-team');
+                const midx = parseInt(btn.getAttribute('data-midx'));
+                setActualWinner(midx, team);
+            });
+        });
+        
+        document.querySelectorAll('.score-input').forEach(input => {
+            input.addEventListener('change', (e) => {
+                const matchupIdx = parseInt(input.getAttribute('data-matchup'));
+                const teamIdx = parseInt(input.getAttribute('data-teamidx'));
+                const gameNum = parseInt(input.getAttribute('data-game'));
+                let newValue = input.value.trim();
+                if (newValue === "") newValue = null;
+                const numValue = newValue !== null ? parseInt(newValue) : null;
+                updateGameScore(matchupIdx, teamIdx, gameNum, numValue);
+            });
+        });
+    }
+
+    function renderFriendsInputs() {
+        const container = document.getElementById('friendsNameInputs');
+        if (!container) return;
+        container.innerHTML = '';
+        for (let i = 0; i < 6; i++) {
+            const div = document.createElement('div');
+            div.className = 'friend-input-item';
+            div.innerHTML = `<label>Friend ${i+1}</label><input type="text" id="friendNameInput${i}" value="${escapeHtml(friends[i] || '')}" placeholder="e.g. Mike">`;
+            container.appendChild(div);
+        }
+    }
+
+    function saveFriendsAndInit() {
+        const newFriends = [];
+        for (let i = 0; i < 6; i++) {
+            const input = document.getElementById(`friendNameInput${i}`);
+            let val = input ? input.value.trim() : `Friend${i+1}`;
+            if (val === "") val = `Player${i+1}`;
+            newFriends.push(val);
+        }
+        const changed = JSON.stringify(friends) !== JSON.stringify(newFriends);
+        friends = newFriends;
+        if (changed || picksMatrix.length === 0 || picksMatrix[0]?.length !== MATCHUPS.length) {
+            picksMatrix = initDefaultPicks();
+        }
+        if (actualWinners.length !== MATCHUPS.length) actualWinners = new Array(MATCHUPS.length).fill(null);
+        if (!scoresData || scoresData.length !== MATCHUPS.length) {
+            scoresData = initScoresData();
+        }
+        saveToLocalStorage();
+        document.getElementById('bracketLiveArea').style.display = 'block';
+        renderFullBracket();
+    }
+
+    function resetEverything() {
+        if (confirm('⚠️ This will erase ALL picks, scores, and winners. Are you sure?')) {
+            localStorage.removeItem('nhl2026_friends_v3');
+            localStorage.removeItem('nhl2026_picksMatrix_v3');
+            localStorage.removeItem('nhl2026_actualWinners_v3');
+            localStorage.removeItem('nhl2026_scoresData_v3');
+            friends = ["Alex", "Jordan", "Taylor", "Casey", "Riley", "Sam"];
+            picksMatrix = initDefaultPicks();
+            actualWinners = new Array(MATCHUPS.length).fill(null);
+            scoresData = initScoresData();
+            renderFriendsInputs();
+            document.getElementById('bracketLiveArea').style.display = 'none';
+            saveToLocalStorage();
+            alert('✅ All data reset. Refresh the bracket by clicking "Save & Start Bracket"');
+        }
+    }
+
+    function initialize() {
+        const loaded = loadFromLocalStorage();
+        if (!loaded) {
+            picksMatrix = initDefaultPicks();
+            actualWinners = new Array(MATCHUPS.length).fill(null);
+            scoresData = initScoresData();
+            saveToLocalStorage();
+        }
+        renderFriendsInputs();
+        document.getElementById('bracketLiveArea').style.display = 'none';
+        
+        // Setup export/import buttons
+        document.getElementById('exportDataBtn').addEventListener('click', exportAllData);
+        document.getElementById('importDataBtn').addEventListener('click', () => {
+            document.getElementById('importFileInput').click();
+        });
+        document.getElementById('importFileInput').addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                importData(e.target.files[0]);
+                e.target.value = '';
+            }
+        });
+    }
+
+    document.getElementById('saveFriendsBtn').addEventListener('click', saveFriendsAndInit);
+    document.getElementById('resetAllBtn').addEventListener('click', resetEverything);
+    initialize();
+</script>
+</body>
+</html>
